@@ -11,19 +11,19 @@ A simple URL shortener written in Go, using MongoDB as the database.
 
 1. Clone this repository:
 
-    ```
+    ```bash
     git clone https://github.com/krwjohnson/url-shortener.git
     ```
 
 2. Navigate to the project directory:
 
-    ```
+    ```bash
     cd url-shortener
     ```
 
 3. Build and run the project:
 
-    ```
+    ```bash
     go build
     go run main.go
     ```

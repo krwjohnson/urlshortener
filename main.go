@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"time"
 	"net/http"
@@ -17,58 +16,26 @@ import (
 )
 
 func main() {
-	collection, err := connectDB()
-	if err != nil {
-		log.Fatal(err)
-	}
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	client, _ := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
+	collection := client.Database("test").Collection("urls")
 
-	r := mux.NewRouter()
+	fs := http.FileServer(http.Dir("./static"))
+	http.Handle("/static/", http.StripPrefix("/static/", fs))
 
-	r.HandleFunc("/", HomeHandler(collection)).Methods("GET", "POST")
-	r.HandleFunc("/{id}", RedirectHandler(collection))
+	http.HandleFunc("/", HomeHandler(collection))
+	http.HandleFunc("/create", CreateHandler(collection))
 
-	http.Handle("/", r)
-	fmt.Println("Server is listening...")
-	http.ListenAndServe(":8080", r)
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
 func HomeHandler(collection *mongo.Collection) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		tmpl := template.Must(template.ParseFiles("index.html"))
-		if r.Method == "POST" {
-			r.ParseForm()
-			url := r.Form.Get("url")
-
-			if !strings.HasPrefix(url, "http://") && !strings.HasPrefix(url, "https://") {
-				url = "http://" + url
-			}
-
-			id, err := generateID()
-			if err != nil {
-				http.Error(w, "Error generating ID", http.StatusInternalServerError)
-				return
-			}
-
-			newURL := &URL{
-				ID:        id,
-				CreatedAt: time.Now(),
-				Dest:      url,
-			}
-
-			_, err = collection.InsertOne(context.Background(), newURL)
-			if err != nil {
-				http.Error(w, "Error inserting URL into database", http.StatusInternalServerError)
-				return
-			}
-
-			shortURL := "http://localhost:8080/" + id
-			tmpl.Execute(w, struct{ ShortURL string }{shortURL})
-
-		} else {
-			tmpl.Execute(w, nil)
-		}
+		tmpl := template.Must(template.ParseFiles("./templates/index.html"))
+		tmpl.Execute(w, nil)
 	}
 }
+
 
 func connectDB() (*mongo.Collection, error) {
 	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
@@ -114,5 +81,43 @@ func RedirectHandler(collection *mongo.Collection) func(w http.ResponseWriter, r
 		}
 
 		http.Redirect(w, r, url.Dest, http.StatusSeeOther)
+	}
+}
+
+func CreateHandler(collection *mongo.Collection) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		r.ParseForm()
+		url := r.Form.Get("url")
+
+		if !strings.HasPrefix(url, "http://") && !strings.HasPrefix(url, "https://") {
+			url = "http://" + url
+		}
+
+		id, err := generateID()
+		if err != nil {
+			http.Error(w, "Error generating ID", http.StatusInternalServerError)
+			return
+		}
+
+		newURL := &URL{
+			ID:        id,
+			CreatedAt: time.Now(),
+			Dest:      url,
+		}
+
+		_, err = collection.InsertOne(context.Background(), newURL)
+		if err != nil {
+			http.Error(w, "Error inserting URL into database", http.StatusInternalServerError)
+			return
+		}
+
+		data := struct {
+			ShortURL string
+		}{
+			ShortURL: "http://localhost:8080/" + id,
+		}
+
+		tmpl := template.Must(template.ParseFiles("templates/index.html"))
+		tmpl.Execute(w, data)
 	}
 }
