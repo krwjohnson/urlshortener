@@ -1,0 +1,12 @@
+<!-- index.html -->
+<html>
+<body>
+<form method="POST">
+Enter URL: <input type="text" name="url">
+<input type="submit" value="Create short URL">
+</form>
+{{ if .ShortURL }}
+<p>Your short URL is: {{ .ShortURL }}</p>
+{{ end }}
+</body>
+</html>
