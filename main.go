@@ -105,40 +105,53 @@ func CreateHandler(collection *mongo.Collection) func(w http.ResponseWriter, r *
             url = "http://" + url
         }
 
+        var result URL
+        ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+        defer cancel()
+        err := collection.FindOne(ctx, bson.M{"dest": url}).Decode(&result)
+
         var id string
-        for {
-            var err error
-            id, err = generateID()
+        if err == mongo.ErrNoDocuments {
+            // URL does not exist in the database, so we generate a new short ID and create it.
+            for {
+                id, err = generateID()
+                if err != nil {
+                    http.Error(w, "Error generating ID", http.StatusInternalServerError)
+                    return
+                }
+
+                var existingURL URL
+                err = collection.FindOne(ctx, bson.M{"id": id}).Decode(&existingURL)
+
+                if err == mongo.ErrNoDocuments {
+                    // This ID does not exist in the database, so we can use it.
+                    break
+                }
+
+                if err != nil {
+                    http.Error(w, "Error searching in database", http.StatusInternalServerError)
+                    return
+                }
+                // This ID exists in the database, so we continue the loop to generate a new one.
+            }
+
+            newURL := &URL{
+                ID:        id,
+                CreatedAt: time.Now(),
+                Dest:      url,
+            }
+
+            _, err = collection.InsertOne(ctx, newURL)
             if err != nil {
-                http.Error(w, "Error generating ID", http.StatusInternalServerError)
+                http.Error(w, "Error inserting URL into database", http.StatusInternalServerError)
                 return
             }
-
-            var result URL
-            err = collection.FindOne(context.Background(), bson.M{"id": id}).Decode(&result)
-
-            if err == mongo.ErrNoDocuments {
-                // This ID does not exist in the database, so we can use it.
-                break
-            }
-
-            if err != nil {
-                http.Error(w, "Error searching in database", http.StatusInternalServerError)
-                return
-            }
-            // This ID exists in the database, so we continue the loop to generate a new one.
-        }
-
-        newURL := &URL{
-            ID:        id,
-            CreatedAt: time.Now(),
-            Dest:      url,
-        }
-
-        _, err := collection.InsertOne(context.Background(), newURL)
-        if err != nil {
-            http.Error(w, "Error inserting URL into database", http.StatusInternalServerError)
+        } else if err != nil {
+            http.Error(w, "Error searching in database", http.StatusInternalServerError)
             return
+        } else {
+            // URL already exists in the database, so we use its existing short ID.
+            id = result.ID
         }
 
         data := struct {
@@ -150,4 +163,5 @@ func CreateHandler(collection *mongo.Collection) func(w http.ResponseWriter, r *
         tmpl.Execute(w, data)
     }
 }
+
 
