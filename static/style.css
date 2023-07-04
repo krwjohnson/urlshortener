@@ -29,7 +29,7 @@ form {
     align-items: center;
 }
 
-input[type="text"] {
+input{
     width: 300px;
     height: 30px;
     margin-bottom: 10px;
@@ -57,6 +57,95 @@ p {
     margin-top: 20px;
 }
 
+#username {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  color: white;
+  z-index: 9999;
+}
+
 div {
     margin-bottom: 10px;
+}
+
+.container {
+    position: absolute;
+    top: 10px;    /* Adjust these values as needed */
+    left: 10px;
+}
+
+.label-check {
+    display: none;
+  }
+  
+  .hamburger-label {
+    width: 70px;
+    height: 58px;
+    display: block;
+    cursor: pointer;
+  }
+  
+  .hamburger-label div {
+    width: 70px;
+    height: 6px;
+    background-color: #fff;
+    position: absolute;
+  }
+  
+  .line1 {
+    transition: all .3s;
+  }
+  
+  .line2 {
+    margin: 18px 0 0 0;
+    transition: 0.3s;
+  }
+  
+  .line3 {
+    margin: 36px 0 0 0;
+    transition: 0.3s;
+  }
+  
+  #label-check:checked + .hamburger-label .line1 {
+    transform: rotate(35deg) scaleX(.55) translate(39px, -4.5px);
+    border-radius: 50px 50px 50px 0;
+  }
+  
+  #label-check:checked + .hamburger-label .line3 {
+    transform: rotate(-35deg) scaleX(.55) translate(39px, 4.5px);
+    border-radius: 0 50px 50px 50px;
+  }
+  
+  #label-check:checked + .hamburger-label .line2 {
+    border-top-right-radius: 50px;
+    border-bottom-right-radius: 50px;
+    width: 45px;
+  }
+
+#menu {
+    position: absolute;
+    top: 50px;  /* Adjust as needed */
+    left: 10px; /* Adjust as needed */
+}
+
+#menu a {
+    color: white;
+    text-decoration: none;
+    display: block;
+}
+
+.menu-hidden {
+    display: none;
+}
+
+.menu-shown {
+    display: block;
+}
+
+.hamburger-menu-buttons {
+  border: none;
+  background: none;
+  color: white;
+  cursor: pointer;
 }

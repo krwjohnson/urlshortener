@@ -1,0 +1,68 @@
+<!-- dashboard.html -->
+<html>
+<head>
+    <title>URL Shortener: Dashboard</title>
+    <link rel="stylesheet" type="text/css" href="/static/style.css">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
+    <link rel="manifest" href="/static/site.webmanifest">
+</head>
+<body>
+    <div id="header">
+        <img src="/static/logo.png" alt="Logo">
+    </div>
+    <div class="container">  
+        <input class="label-check" id="label-check" type="checkbox">
+          <label for="label-check" class="hamburger-label">
+            <div class="line1"></div>
+            <div class="line2"></div>
+            <div class="line3"></div>
+          <label></label></label></div>
+          <div id="menu" class="menu-hidden">
+            {{if .Authenticated}}
+            <form action="/api/logout" method="POST" style="display: inline;">
+                <input type="submit" value="Dashboard" style="border: none; background: none; color: white; cursor: pointer;">
+                <input type="submit" value="Logout" style="border: none; background: none; color: white; cursor: pointer;">
+            </form>
+            {{else}}
+                <a href="/home">Home</a>
+                <a href="/api/register">Register</a>
+                <a href="/api/login">Login</a>
+            {{end}}
+        </div>
+        <div id="username">
+            {{ if .Authenticated }}
+                {{ .Email }} logged in
+            {{ end }}
+        </div>
+        <h1>Welcome to your dashboard!</h1>
+        <h2>Your shortened URLs:</h2>
+        <table>
+            <tr>
+                <th>Short URL</th>
+                <th>Destination URL</th>
+                <th>Created At</th>
+            </tr>
+            {{range .URLs}}
+            <tr>
+                <td>{{.ShortID}}</td>
+                <td>{{.Dest}}</td>
+                <td>{{.CreatedAt}}</td>
+            </tr>
+            {{end}}
+        </table>
+    <script>
+        document.getElementById('label-check').addEventListener('change', function() {
+            var menu = document.getElementById('menu');
+            if (this.checked) {
+                menu.classList.remove('menu-hidden');
+                menu.classList.add('menu-shown');
+            } else {
+                menu.classList.remove('menu-shown');
+                menu.classList.add('menu-hidden');
+            }
+        });
+        </script>
+</body>
+</html>

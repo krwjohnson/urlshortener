@@ -2,11 +2,13 @@ package main
 
 import (
 	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// URL represents url document in MongoDB
 type URL struct {
-	ID        string    `bson:"_id,omitempty"`
-	CreatedAt time.Time `bson:"created_at,omitempty"`
-	Dest      string    `bson:"dest,omitempty"`
+    ID        primitive.ObjectID `bson:"_id,omitempty"`
+    ShortID   string             `bson:"shortID"`
+    CreatedAt time.Time          `bson:"createdAt"`
+    Dest      string             `bson:"dest"`
 }
